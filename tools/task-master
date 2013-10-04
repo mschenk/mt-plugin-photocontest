@@ -1,0 +1,141 @@
+#!/usr/bin/perl
+
+package MT::TaskMaster;
+
+use strict;
+use warnings;
+
+use lib qw( lib extlib );
+use base qw( MT::Tool );
+
+my $VERSION = '1.0';
+
+use MT::Task;
+use MT::Session;
+use MT::TaskMgr;
+
+sub options {
+    return ();
+}
+
+sub freq_to_str {
+    my $freq = shift;
+    my ( $d, $h, $m, $s ) = ( 0, 0, 0, 0 );
+
+    $d++, $freq -= ( 60 * 60 * 24 ) while ( $freq >= ( 60 * 60 * 24 ) );
+    $h++, $freq -= ( 60 * 60 ) while ( $freq >= ( 60 * 60 ) );
+    $m++, $freq -= 60 while ( $freq >= 60 );
+    $s = $freq;
+
+    my $str = '';
+    $str .= "${d}d" if $d;
+    $str .= "${h}h" if $h;
+    $str .= "${m}m" if $m;
+    $str .= "${s}s" if $s;
+
+    $str;
+}
+
+sub cmd_list {
+    my $class = shift;
+    my @args  = @_;
+
+    my $tasks = MT->registry('tasks');
+    for my $t ( sort keys %$tasks ) {
+        print "$t:\n";
+        my $task = $tasks->{$t};
+        if ( ref $task eq 'HASH' ) {
+            $task->{key} ||= $t;
+            $task = MT::Task->new($task);
+        }
+        print "\tLabel: " . $task->label . "\n";
+        print "\tFrequency: " . freq_to_str( $task->frequency ) . "\n";
+        print "\tComponent: " . $task->{plugin}->name . "\n";
+    }
+}
+
+sub cmd_forcerun {
+    my $class = shift;
+    my @args  = @_;
+
+    unless (@args) {
+        print "Task keys required for forcerun command\n";
+        return;
+    }
+
+    require MT::Session;
+    MT::Session->remove( { kind => 'PT', id => [ map { "Task:$_" } @args ] } );
+
+    $class->cmd_run(@args);
+}
+
+sub cmd_run {
+    my $class = shift;
+    my @args  = @_;
+
+    unless (@args) {
+        print "Task keys required for run command\n";
+        return;
+    }
+
+    MT::TaskMgr->run_tasks(@args);
+    $class->cmd_status(@args);
+}
+
+sub cmd_status {
+    my $class = shift;
+    my @args  = @_;
+
+    require MT::Session;
+    my @sessions = MT::Session->load( { kind => 'PT' } );
+
+    if (@args) {
+        my %task_keys = map { my $k = "Task:$_"; $k => 1 } @args;
+        @sessions = grep { exists $task_keys{ $_->id } } @sessions;
+    }
+
+    if (@sessions) {
+        my $tasks = MT->registry('tasks');
+      SESSION:
+        for my $session (@sessions) {
+            my $id = $session->id;
+            $id =~ s/^Task://;
+            unless ( exists $tasks->{$id} ) {
+                print "Unknown task key: $id\n";
+                next SESSION;
+            }
+            my $task = $tasks->{$id};
+            if ( ref $task eq 'HASH' ) {
+                $task->{key} ||= $id;
+                $task = MT::Task->new($task);
+            }
+
+            my $name          = $task->label();
+            my $last_finished = localtime( $session->start );
+
+            print "$name last finished at: $last_finished\n";
+        }
+    }
+    else {
+        print "No task data found.\n";
+    }
+}
+
+sub main {
+    my $class = shift;
+    my ($verbose) = $class->SUPER::main(@_);
+
+    my $cmd = shift @ARGV;
+
+    unless ( $cmd && $class->can("cmd_$cmd") ) {
+        print "Need a known command!\n";
+        return;
+    }
+
+    my $cmd_method = "cmd_$cmd";
+    $class->$cmd_method(@ARGV);
+}
+
+__PACKAGE__->main() unless caller;
+
+1;
