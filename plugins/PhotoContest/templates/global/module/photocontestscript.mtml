@@ -1,0 +1,44 @@
+<MTSetVarBlock name="html_head">
+<script type="text/javascript" src="http://www.salzburg.com/nwas/scripts/jquery-1.2.3.js"></script>
+<script type="text/javascript">
+var $j = jQuery.noConflict();
+var decremented = 0;
+$j(document).ready(function(){
+		var contestphotosleft = 0;
+		$j.getJSON("<mt:cgipath><mt:communityscript>?__mode=contestphotosleft", function (data){
+				contestphotosleft = data.contestphotosleft;
+				if (contestphotosleft){
+					$j("#profile_add_to_contest-label").append(" (You can submit " + contestphotosleft + " this month)");
+				}
+				else {
+					$j("#profile_add_to_contest-label").append(" (You submitted all the photos you could submit this month)");
+					$j("#customfield_add_to_contest").attr("disabled", true);
+				}
+		});
+		
+		$j('#create-entry-form').submit(function(){
+				if (! contestphotosleft){
+					if ($j("#customfield_add_to_contest").attr('checked')){
+						alert("You already submitted the maximum number of photos for this contest this month");
+					}
+					$j("#customfield_add_to_contest").attr('checked', false);
+					$j("#customfield_add_to_contest").attr("disabled", true);
+				}
+				else {
+					if ($j("#customfield_add_to_contest").attr('checked')){
+						$j.get("<mt:cgipath><mt:communityscript>?__mode=decrementcontestphotosleft", function(data){
+								decremented = 1;
+								$j('#create-entry-form').submit();
+						});
+						if (decremented){return true};
+					}
+					return false;
+				}
+				return true;
+		});
+				
+});		
+</script>
+</mt:setvarblock>
+
+

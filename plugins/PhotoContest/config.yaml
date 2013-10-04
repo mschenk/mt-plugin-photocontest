@@ -1,0 +1,60 @@
+name: PhotoContest for Movable Type
+id: PhotoContest
+author_link: http://www.movabletips.com/
+author_name: Maarten Schenk
+description: A plugin to run a photo contest.
+plugin_link: http://www.movabletips.com/
+doc_link: http://www.movabletips.com/
+version: 1.0
+static_version: 1.2
+schema_version: 1.2
+
+
+tasks:
+  reset_available_contestphotos:
+    label:     "Reset the amount of contest photos users can post this month"
+    frequency: 3600
+    code:      $PhotoContest::PhotoContest::Plugin::contestphotosreset
+
+applications:
+  community:
+    methods:
+      contestphotosleft: $PhotoContest::PhotoContest::Plugin::contestphotosleft
+      decrementcontestphotosleft: $PhotoContest::PhotoContest::Plugin::decrementcontestphotosleft
+      
+template_sets:
+  photocontest_theme:
+    base_path: templates/photocontest_theme
+    label: 'PhotoContest Theme (use on blank blog to set up custom field required for PhotoContest plugin)'
+    sys_fields:
+      add_to_contest:
+        label: "Add to photocontest"
+        description: "Mark this entry as part of the photo contest?"
+        default: 0
+        required: 0
+        obj_type: entry
+        scope: blog
+        tag: addtocontest
+        type: checkbox    
+      contestphotosleft:
+        label: "Contest Photos Left"
+        description: "How many photos can this user still submit this month?"
+        default: 4
+        required: 0
+        obj_type: author
+        scope: system
+        tag: contestphotosleft
+        type: text        
+        
+default_templates:
+    base_path: templates/global
+    global:module:      
+      photocontestscript:
+        filename: module/photocontestscript.mtml
+        label: 'Photo Contest Form Javascript'    
+      contestphotos:
+        filename: module/contestphotos.mtml
+        label: "Photo Contest Photos"        
+            
+                       
+
