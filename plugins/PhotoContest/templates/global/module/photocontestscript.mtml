@@ -1,5 +1,5 @@
 <MTSetVarBlock name="html_head">
-<script type="text/javascript" src="http://www.salzburg.com/nwas/scripts/jquery-1.2.3.js"></script>
+<script type="text/javascript" src="http://www.salzburg.com/nachrichten/fileadmin/scripts/moduls/jquery/jquery-1.5.2.min.js"></script>
 <script type="text/javascript">
 var $j = jQuery.noConflict();
 var decremented = 0;
@@ -8,10 +8,10 @@ $j(document).ready(function(){
 		$j.getJSON("<mt:cgipath><mt:communityscript>?__mode=contestphotosleft", function (data){
 				contestphotosleft = data.contestphotosleft;
 				if (contestphotosleft){
-					$j("#profile_add_to_contest-label").append(" (You can submit " + contestphotosleft + " this month)");
+					$j('label[for="customfield_add_to_contest"]').append(" (Sie können diesen Monat noch " + contestphotosleft + " Bilder zum Wettbewerb einsenden)");
 				}
 				else {
-					$j("#profile_add_to_contest-label").append(" (You submitted all the photos you could submit this month)");
+					$j('label[for="customfield_add_to_contest"]').append(" (Sie haben diesen Monat bereits ihr Wettbewerbslimit an Bildern erreicht)");
 					$j("#customfield_add_to_contest").attr("disabled", true);
 				}
 		});
@@ -19,7 +19,7 @@ $j(document).ready(function(){
 		$j('#create-entry-form').submit(function(){
 				if (! contestphotosleft){
 					if ($j("#customfield_add_to_contest").attr('checked')){
-						alert("You already submitted the maximum number of photos for this contest this month");
+						alert("Sie haben diesen Monat bereits ihr Wettbewerbslimit an Bildern erreicht");
 					}
 					$j("#customfield_add_to_contest").attr('checked', false);
 					$j("#customfield_add_to_contest").attr("disabled", true);
@@ -40,5 +40,6 @@ $j(document).ready(function(){
 });		
 </script>
 </mt:setvarblock>
+
 
 
