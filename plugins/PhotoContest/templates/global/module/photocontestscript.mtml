@@ -8,7 +8,7 @@ $j(document).ready(function(){
 		$j.getJSON("<mt:cgipath><mt:communityscript>?__mode=contestphotosleft", function (data){
 				contestphotosleft = data.contestphotosleft;
 				if (contestphotosleft){
-					$j('label[for="customfield_add_to_contest"]').append(" (Sie können diesen Monat noch " + contestphotosleft + " Bilder zum Wettbewerb einsenden)");
+					$j('label[for="customfield_add_to_contest"]').append(" <br/>(Sie können diesen Monat noch <strong>" + contestphotosleft + " Bilder</strong> zum Wettbewerb einsenden)<span><a style='font-size:12px;font-weight:600;color:#D93A28' href='http://www.salzburg.com/nachrichten/freizeit/gewinnspiele/sn/artikel/dein-foto-im-schoene-heimat-kalender-2015-30866/' target='_blank'> ?</a></span>");
 				}
 				else {
 					$j('label[for="customfield_add_to_contest"]').append(" (Sie haben diesen Monat bereits ihr Wettbewerbslimit an Bildern erreicht)");
@@ -17,29 +17,29 @@ $j(document).ready(function(){
 		});
 		
 		$j('#create-entry-form').submit(function(){
-				if (! contestphotosleft){
+				if (! contestphotosleft){ // No more photos left in the contest, if the box was checked anyway display error message and uncheck it, then submit the form.
 					if ($j("#customfield_add_to_contest").attr('checked')){
 						alert("Sie haben diesen Monat bereits ihr Wettbewerbslimit an Bildern erreicht");
 					}
 					$j("#customfield_add_to_contest").attr('checked', false);
 					$j("#customfield_add_to_contest").attr("disabled", true);
 				}
-				else {
-					if ($j("#customfield_add_to_contest").attr('checked')){
+				else { // There are photo slots left in the contest
+					if ($j("#customfield_add_to_contest").attr('checked')){  // If the box was checked, don't submit the form but decrement the counter, then submit the form again and we let it through next time if we see we already decremented the counter
 						$j.get("<mt:cgipath><mt:communityscript>?__mode=decrementcontestphotosleft", function(data){
 								decremented = 1;
-								$j('#create-entry-form').submit();
+								$j('#create-entry-form').submit();  // This will submit the form again, triggering the same function we are in now, but with 'decremented' set to 1...
 						});
 						if (decremented){return true};
 					}
-					return false;
+                                        else { // The box wasn't checked, so submit away...
+                                                return true;
+                                        }
+					return false; // The box was checked but we didn't decrement yet, so don't submit.  Submission will happen when the decrement call returns.
 				}
-				return true;
+				return true;  // There were no contest photos left but we unchecked the box, so submit away
 		});
-				
+		
 });		
 </script>
 </mt:setvarblock>
-
-
-
